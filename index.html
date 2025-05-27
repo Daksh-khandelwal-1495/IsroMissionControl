@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISRO Mission Control</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link rel = "stylesheet" href = "styles.css">
+    <link rel="icon" href="logo.png" type="image/icon type">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+    <canvas id="space-background"></canvas>
+    
+    <nav class="navbar">
+        <a href="#" class="nav-logo">ISRO Mission Control</a>
+        <div class="nav-links">
+            <a href="#" class="nav-link" onclick="showLanding()">Home</a>
+            <a href="#" class="nav-link" onclick="showDashboard()">Dashboard</a>
+        </div>
+    </nav>
+
+    <section class="landing-page" id="landing">
+        <h1 class="landing-title animate__animated animate__fadeIn">ISRO Mission Control</h1>
+        <p class="landing-subtitle animate__animated animate__fadeIn animate__delay-1s">
+            Explore India's space missions, satellites, and the brilliant minds behind them.
+            Join us in our journey to the stars.
+        </p>
+        <a href="#" class="cta-button animate__animated animate__fadeIn animate__delay-2s" onclick="showDashboard()">
+            Enter Mission Control
+        </a>
+    </section>
+
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <!-- Missions Section -->
+            <div class="section animate__animated animate__fadeInLeft">
+                <h2>Space Missions</h2>
+                <form id="missionForm" onsubmit="addMission(); return false;">
+                    <input type="text" id="missionName" placeholder="Mission Name" required>
+                    <input type="date" id="missionLaunchDate" required>
+                    <select id="missionStatus" required>
+                        <option value="" disabled selected>Select Mission Status</option>
+                        <option value="planned">Planned</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                        <option value="aborted">Aborted</option>
+                    </select>
+                    <button type="submit">Launch Mission</button>
+                </form>
+                <div id="missionsDisplay"></div>
+            </div>
+
+            <!-- Satellites Section -->
+            <div class="section animate__animated animate__fadeInUp">
+                <h2>Satellites</h2>
+                <form id="satelliteForm" onsubmit="addSatellite(); return false;">
+                    <input type="text" id="satelliteName" placeholder="Satellite Name" required>
+                    <input type="number" id="satelliteMissionId" placeholder="Mission ID" required>
+                    <button type="submit">Deploy Satellite</button>
+                </form>
+                <div id="satellitesDisplay"></div>
+            </div>
+
+            <!-- Scientists Section -->
+            <div class="section animate__animated animate__fadeInRight">
+                <h2>Mission Scientists</h2>
+                <form id="scientistForm" onsubmit="addScientist(); return false;">
+                    <input type="text" id="scientistName" placeholder="Scientist Name" required>
+                    <input type="text" id="scientistExpertise" placeholder="Area of Expertise" required>
+                    <button type="submit">Add Scientist</button>
+                </form>
+                <div id="scientistsDisplay"></div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Three.js Space Background
+        const canvas = document.getElementById('space-background');
+        const renderer = new THREE.WebGLRenderer({ canvas });
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // Stars
+        const starGeometry = new THREE.BufferGeometry();
+        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+
+        const starVertices = [];
+        for (let i = 0; i < 10000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = -Math.random() * 2000;
+            starVertices.push(x, y, z);
+        }
+
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            stars.rotation.z += 0.0001;
+            renderer.render(scene, camera);
+        }
+
+        function resizeCanvas() {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        animate();
+
+        // Navigation Functions
+        function showLanding() {
+            document.getElementById('landing').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('landing').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            // Fetch initial data
+            fetchAndDisplayMissions();
+            fetchAndDisplaySatellites();
+            fetchAndDisplayScientists();
+        }
+
+        // 
+        const API_BASE_URL = config.API_BASE_URL;
+
+        async function fetchAndDisplayMissions() {
+            const response = await fetch(`${API_BASE_URL}/missions`);
+            const missions = await response.json();
+            const missionsDisplay = document.getElementById("missionsDisplay");
+            missionsDisplay.innerHTML = "";
+
+            missions.forEach(mission => {
+                const missionElement = document.createElement("div");
+                missionElement.className = "item";
+                missionElement.innerHTML = `
+                    <strong>Mission:</strong> ${mission.name} <br>
+                    <strong>Launch Date:</strong> ${mission.launch_date} <br>
+                    <strong>Status:</strong> ${mission.status} <br>
+                    <div class="action-buttons">
+                        <button onclick="deleteMission(${mission.id})" class="delete-btn">Delete</button>
+                        <button onclick="editMission(${mission.id})" class="edit-btn">Edit</button>
+                    </div>
+                `;
+                missionsDisplay.appendChild(missionElement);
+            });
+        }
+
+        // Keep all your existing functions for CRUD operations
+        async function fetchAndDisplaySatellites() {
+            const response = await fetch(`${API_BASE_URL}/satellites`);
+            const satellites = await response.json();
+            const satellitesDisplay = document.getElementById("satellitesDisplay");
+            satellitesDisplay.innerHTML = "";
+
+            satellites.forEach(satellite => {
+                const satelliteElement = document.createElement("div");
+                satelliteElement.className = "item";
+                satelliteElement.innerHTML = `
+                    <strong>Satellite:</strong> ${satellite.name} <br>
+                    <strong>Mission ID:</strong> ${satellite.mission_id} <br>
+                    <div class="action-buttons">
+                        <button onclick="deleteSatellite(${satellite.id})" class="delete-btn">Delete</button>
+                        <button onclick="editSatellite(${satellite.id})" class="edit-btn">Edit</button>
+                    </div>
+                `;
+                satellitesDisplay.appendChild(satelliteElement);
+            });
+        }
+
+        async function fetchAndDisplayScientists() {
+            const response = await fetch(`${API_BASE_URL}/scientists`);
+            const scientists = await response.json();
+            const scientistsDisplay = document.getElementById("scientistsDisplay");
+            scientistsDisplay.innerHTML = "";
+
+            scientists.forEach(scientist => {
+                const scientistElement = document.createElement("div");
+                scientistElement.className = "item";
+                scientistElement.innerHTML = `
+                    <strong>Scientist:</strong> ${scientist.name} <br>
+                    <strong>Expertise:</strong> ${scientist.expertise} <br>
+                    <div class="action-buttons">
+                        <button onclick="deleteScientist(${scientist.id})" class="delete-btn">Delete</button>
+                        <button onclick="editScientist(${scientist.id})" class="edit-btn">Edit</button>
+                    </div>
+                `;
+                scientistsDisplay.appendChild(scientistElement);
+            });
+        }
+
+        // Preserve all other existing JavaScript functions
+        
+        
+        async function addMission() {
+            const name = document.getElementById("missionName").value;
+            const launch_date = document.getElementById("missionLaunchDate").value;
+            const status = document.getElementById("missionStatus").value;
+
+            await fetch(`${API_BASE_URL}/missions`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, launch_date, status })
+            });
+            fetchAndDisplayMissions();
+            document.getElementById("missionForm").reset();
+        }
+
+        async function addSatellite() {
+            const name = document.getElementById("satelliteName").value;
+            const mission_id = document.getElementById("satelliteMissionId").value;
+
+            await fetch(`${API_BASE_URL}/satellites`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, mission_id })
+            });
+            fetchAndDisplaySatellites();
+            document.getElementById("satelliteForm").reset();
+        }
+
+        async function addScientist() {
+            const name = document.getElementById("scientistName").value;
+            const expertise = document.getElementById("scientistExpertise").value;
+
+            await fetch(`${API_BASE_URL}/scientists`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, expertise })
+            });
+            fetchAndDisplayScientists();
+            document.getElementById("scientistForm").reset();
+        }
+
+        async function deleteMission(id) {
+            await fetch(`${API_BASE_URL}/missions/${id}`, { method: "DELETE" });
+            fetchAndDisplayMissions();
+        }
+
+        async function deleteSatellite(id) {
+            await fetch(`${API_BASE_URL}/satellites/${id}`, { method: "DELETE" });
+            fetchAndDisplaySatellites();
+        }
+
+        async function deleteScientist(id) {
+            await fetch(`${API_BASE_URL}/scientists/${id}`, { method: "DELETE" });
+            fetchAndDisplayScientists();
+        }
+
+        async function editMission(id) {
+            const name = prompt("Enter new mission name:");
+            const launch_date = prompt("Enter new launch date:");
+            const status = prompt("Enter new status:");
+
+            await fetch(`${API_BASE_URL}/missions/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, launch_date, status })
+            });
+            fetchAndDisplayMissions();
+        }
+
+        async function editSatellite(id) {
+            const name = prompt("Enter new satellite name:");
+            const mission_id = prompt("Enter new mission ID:");
+
+            await fetch(`${API_BASE_URL}/satellites/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, mission_id })
+            });
+            fetchAndDisplaySatellites();
+        }
+
+        async function editScientist(id) {
+            const name = prompt("Enter new scientist name:");
+            const expertise = prompt("Enter new expertise:");
+
+            await fetch(`${API_BASE_URL}/scientists/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, expertise })
+            });
+            fetchAndDisplayScientists();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchAndDisplayMissions();
+            fetchAndDisplaySatellites();
+            fetchAndDisplayScientists();
+        });
+
+
+    </script>
+</body>
+</html>

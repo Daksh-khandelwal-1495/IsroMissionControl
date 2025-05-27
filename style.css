@@ -1,0 +1,68 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #000;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    background-image: url('https://source.unsplash.com/1600x900/?space');
+    background-size: cover;
+}
+
+h1, h2 {
+    margin: 20px 0;
+}
+
+/* Form Styling */
+form {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+input, select, button {
+    display: block;
+    width: 90%;
+    margin: 10px auto;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+input, select {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+button {
+    background: #007bff;
+    color: #fff;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* Display Containers */
+#missionsDisplay, #satellitesDisplay, #scientistsDisplay {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+div {
+    text-align: left;
+}
+
+hr {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
